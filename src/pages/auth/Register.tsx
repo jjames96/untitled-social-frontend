@@ -1,161 +1,186 @@
+/* eslint-disable react/no-unused-state */
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import React, { ChangeEvent } from "react";
+import React, { ChangeEvent, FormEvent, useState } from "react";
+import { useCookies } from "react-cookie";
+import { REGISTER_URL } from "../../api/config";
+import {
+  BASE_COOKIE_ID,
+  TOKEN_COOKIE_ID,
+  USERNAME_COOKIE_ID,
+} from "../../cookies/Cookies";
 
-interface RegisterState {
-  username: string;
-  firstName: string;
-  lastName: string;
-  password: string;
-  confirmPassword: string;
-}
+const Register = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [cookie, setCookie] = useCookies([BASE_COOKIE_ID]);
 
-class Register extends React.Component<Record<string, never>, RegisterState> {
-  constructor(props: Record<string, never>) {
-    super(props);
-    this.state = {
-      username: "",
-      firstName: "",
-      lastName: "",
-      password: "",
-      confirmPassword: "",
+  const [uName, setUName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+
+  const handleUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setUName(event.currentTarget.value);
+  };
+
+  const handleFirstNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setFirstName(event.currentTarget.value);
+  };
+
+  const handleLastNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setLastName(event.currentTarget.value);
+  };
+
+  const handlePasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setPassword(event.currentTarget.value);
+  };
+
+  const handleConfirmPasswordChange = (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    setConfirmPassword(event.currentTarget.value);
+  };
+
+  const handleRememberMeChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setRememberMe(event.currentTarget.checked);
+  };
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+
+    const currentState = {
+      username: uName,
+      firstName,
+      lastName,
+      password,
+      confirmPassword,
     };
 
-    this.handleUsernameChange = this.handleUsernameChange.bind(this);
-    this.handleFirstNameChange = this.handleFirstNameChange.bind(this);
-    this.handleLastNameChange = this.handleLastNameChange.bind(this);
-    this.handlePasswordChange = this.handlePasswordChange.bind(this);
-    this.handleConfirmPasswordChange = this.handleConfirmPasswordChange.bind(
-      this
-    );
-    this.handleSubmit = this.handleSubmit.bind(this);
-  }
+    const requestOptions = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(currentState),
+    };
 
-  handleUsernameChange(event: ChangeEvent<HTMLInputElement>) {
-    this.setState({ username: event.currentTarget.value });
-  }
+    fetch(REGISTER_URL, requestOptions)
+      .then((response) => response.json())
+      .then((data) => {
+        const { username, token } = data;
 
-  handleFirstNameChange(event: ChangeEvent<HTMLInputElement>) {
-    this.setState({ firstName: event.currentTarget.value });
-  }
+        if (!username || !token) {
+          // TODO: Handle error better
+          return;
+        }
 
-  handleLastNameChange(event: ChangeEvent<HTMLInputElement>) {
-    this.setState({ lastName: event.currentTarget.value });
-  }
+        if (rememberMe) {
+          // Store token in persistent cookie
+          setCookie(USERNAME_COOKIE_ID, username, {
+            maxAge: 60 * 60 * 24 * 365,
+          });
+          setCookie(TOKEN_COOKIE_ID, token, {
+            maxAge: 60 * 60 * 24 * 365,
+          });
+        } else {
+          // Store token in session cookie
+          setCookie(USERNAME_COOKIE_ID, username);
+          setCookie(TOKEN_COOKIE_ID, token);
+        }
+      });
+  };
 
-  handlePasswordChange(event: ChangeEvent<HTMLInputElement>) {
-    this.setState({ password: event.currentTarget.value });
-  }
-
-  handleConfirmPasswordChange(event: ChangeEvent<HTMLInputElement>) {
-    this.setState({ confirmPassword: event.currentTarget.value });
-  }
-
-  handleSubmit() {
-    const currentState = this.state;
-
-    console.log(
-      `Form submitted with values:
-      Username: ${currentState.username}
-      First Name: ${currentState.firstName}
-      Last Name: ${currentState.lastName}
-      Password: ${currentState.password}
-      Confirm Password: ${currentState.confirmPassword}`
-    );
-  }
-
-  render() {
-    return (
-      <div className="jumbotron jumbotron-fluid mt-4">
-        <div className="container">
-          <h1 className="display-4">Register</h1>
-          <hr className="my-4" />
-          <form onSubmit={this.handleSubmit}>
-            <div className="form-group">
-              <div className="input-group">
-                <div className="input-group-prepend">
-                  <div className="input-group-text" id="btnGroupAddon">
-                    @
-                  </div>
+  return (
+    <div className="jumbotron jumbotron-fluid mt-4">
+      <div className="container">
+        <h1 className="display-4">Register</h1>
+        <hr className="my-4" />
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <div className="input-group">
+              <div className="input-group-prepend">
+                <div className="input-group-text" id="btnGroupAddon">
+                  @
                 </div>
+              </div>
+              <input
+                type="text"
+                className="form-control"
+                id="inputUsername"
+                placeholder="Username"
+                required
+                onChange={handleUsernameChange}
+              />
+            </div>
+          </div>
+          <div className="form-group">
+            <div className="form-row">
+              <div className="col">
                 <input
                   type="text"
                   className="form-control"
-                  id="inputUsername"
-                  placeholder="Username"
+                  id="inputFirstName"
+                  placeholder="First Name"
                   required
-                  onChange={this.handleUsernameChange}
+                  onChange={handleFirstNameChange}
+                />
+              </div>
+              <div className="col">
+                <input
+                  type="text"
+                  className="form-control"
+                  id="inputLastName"
+                  placeholder="Surname"
+                  required
+                  onChange={handleLastNameChange}
                 />
               </div>
             </div>
-            <div className="form-group">
-              <div className="form-row">
-                <div className="col">
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="inputFirstName"
-                    placeholder="First Name"
-                    required
-                    onChange={this.handleFirstNameChange}
-                  />
-                </div>
-                <div className="col">
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="inputLastName"
-                    placeholder="Surname"
-                    required
-                    onChange={this.handleLastNameChange}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="form-group">
-              <input
-                type="password"
-                className="form-control"
-                id="inputPassword"
-                placeholder="Password"
-                required
-                pattern=".{3,}"
-                onChange={this.handlePasswordChange}
-              />
-              <small id="passwordHelpBlock" className="form-text text-muted">
-                Your password must be 3+ characters long.
-              </small>
-            </div>
-            <div className="form-group">
-              <input
-                type="password"
-                className="form-control"
-                id="inputConfirmPassword"
-                placeholder="Confirm Password"
-                required
-                pattern=".{3,}"
-                onChange={this.handleConfirmPasswordChange}
-              />
-            </div>
-            <div className="form-check">
-              <input
-                type="checkbox"
-                className="form-check-input"
-                id="rememberMeCheck"
-              />
-              <label className="form-check-label" htmlFor="rememberMeCheck">
-                Remember Me
-              </label>
-            </div>
-            <div className="mt-4">
-              <button type="submit" className="btn btn-primary">
-                Create An Account
-              </button>
-            </div>
-          </form>
-        </div>
+          </div>
+          <div className="form-group">
+            <input
+              type="password"
+              className="form-control"
+              id="inputPassword"
+              placeholder="Password"
+              required
+              pattern=".{3,}"
+              onChange={handlePasswordChange}
+            />
+            <small id="passwordHelpBlock" className="form-text text-muted">
+              Your password must be 3+ characters long.
+            </small>
+          </div>
+          <div className="form-group">
+            <input
+              type="password"
+              className="form-control"
+              id="inputConfirmPassword"
+              placeholder="Confirm Password"
+              required
+              pattern=".{3,}"
+              onChange={handleConfirmPasswordChange}
+            />
+          </div>
+          <div className="form-check">
+            <input
+              type="checkbox"
+              className="form-check-input"
+              id="rememberMeCheck"
+              onChange={handleRememberMeChange}
+            />
+            <label className="form-check-label" htmlFor="rememberMeCheck">
+              Remember Me
+            </label>
+          </div>
+          <div className="mt-4">
+            <button type="submit" className="btn btn-primary">
+              Create An Account
+            </button>
+          </div>
+        </form>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default Register;
