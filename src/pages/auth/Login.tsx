@@ -65,7 +65,8 @@ const Login = () => {
           setCookie(USERNAME_COOKIE_ID, username);
           setCookie(TOKEN_COOKIE_ID, token);
         }
-      });
+      })
+      .then(() => window.location.replace("/home"));
   };
 
   return (

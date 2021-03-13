@@ -14,6 +14,7 @@ const Navbar = () => {
   const handleLogout = () => {
     removeCookie(TOKEN_COOKIE_ID);
     removeCookie(USERNAME_COOKIE_ID);
+    window.location.replace("/");
   };
 
   return (
@@ -40,7 +41,7 @@ const Navbar = () => {
                 className="dropdown-menu dropdown-menu-right"
                 aria-labelledby="navbarDropdown"
               >
-                <a className="dropdown-item" href="#">
+                <a className="dropdown-item" href="/profile">
                   Profile
                 </a>
                 <div className="dropdown-divider" />
